@@ -1,7 +1,9 @@
-import { Router } from "express";
 import express from "express";
-import userController from '../controllers/userController'
+const router = express.Router();
+import { getCategory, getProducts, getSingleCategory } from "../controllers/User.js";
 
-Router=express.Router();
+router.get("/products", getProducts);
+router.get("/categories", getCategory);
+router.get("/categories/:id", getSingleCategory);
 
-Router.post('/register',userController.register)
+export default router;

@@ -4,9 +4,12 @@ const productSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    productImage: {
-      type: String,
-    },
+    brand: { type: String, required: true },
+    productImages: [
+      {
+        type: String,
+      },
+    ],
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
@@ -23,4 +26,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = ("Product", productSchema);
+export default mongoose.model("Product", productSchema);
