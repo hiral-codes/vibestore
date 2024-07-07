@@ -1,64 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/protected-routes";
+import { Layout } from "./components/admin-layout";
+import { CustomerLayout } from "./components/customer-layout";
+import Home from "./components/Home";
+import Orders from "./pages/Order";
+import Products from "./pages/manage-product";
+import Customers from "./pages/Customers";
+import Analytics from "./pages/Analytics";
+// import Orders from "./components/Order";
+// import Products from "./components/Products";
+// import Customers from "./components/Customers";
+// import Analytics from "./components/Analytics";
 
-const App = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const isAdmin = true;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/user/products");
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        const data = await response.json();
-        console.log(data);
-        const productsWithCategories = await Promise.all(
-          data.map(async (product) => {
-            const categoryResponse = await fetch(
-              `http://localhost:8000/api/user/categories/${product.category}`
-            );
-            const categoryData = await categoryResponse.json();
-            return { ...product, category: categoryData };
-          })
-        );
-        setProducts(productsWithCategories);
-        setLoading(false);
-      } catch (error) {
-        setError(error.message);
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
+function App() {
   return (
-    <div>
-      {products.map((product) => (
-        <div key={product._id}>
-          <h2>{product.title}</h2>
-          <p>{product.description}</p>
-          <p>Category: {product.category.name}</p>
-          <p>Brand: {product.brand}</p>
-          {product.productImages.map((img) => {
-            return <img src={img} alt="" className="h-40" />;
-          })}
-          <p>Price: ${product.price}</p>
-          {/* Render other product details as needed */}
-        </div>
-      ))}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<CustomerLayout />}>
+          <Route index element={<Home />} />
+          {/* <Route path="orders" element={<Orders />} />
+          <Route path="products" element={<Products />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="analytics" element={<Analytics />} /> */}
+        </Route>
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute isAdmin={isAdmin} adminOnly={true}>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Home />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="products" element={<Products />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="analytics" element={<Analytics />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;
