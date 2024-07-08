@@ -13,59 +13,36 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "../utils/api";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { LoaderIcon } from "lucide-react";
 
 function EditProduct({ productId, onClose }) {
   const { toast } = useToast();
+
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     description: "",
     brand: "",
-    category: "",
     price: "",
     stock: "",
-    images: [],
   });
+
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
     fetchProductData();
   }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get("/user/categories");
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast({ description: "Error fetching categories!" });
-    }
-  };
 
   const fetchProductData = async () => {
     try {
       const response = await axios.get(`/user/products/${productId}`);
       const product = response.data;
       setFormData({
-        name: product.title,
+        title: product.title,
         description: product.description,
         brand: product.brand,
-        category: product.category,
         price: product.price,
         stock: product.stock,
-        images: [], // Not populating images since they can't be edited directly
       });
       setIsDataLoaded(true);
     } catch (error) {
@@ -79,42 +56,13 @@ function EditProduct({ productId, onClose }) {
     setFormData({ ...formData, [id]: value });
   };
 
-  const handleImageChange = (e) => {
-    setFormData({ ...formData, images: e.target.files });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    // Basic validation
-    if (
-      !formData.name ||
-      !formData.category ||
-      !formData.price ||
-      !formData.stock
-    ) {
-      toast({ description: "Please fill all required fields!" });
-      setLoading(false);
-      return;
-    }
-
-    const data = new FormData();
-    data.append("title", formData.name);
-    data.append("description", formData.description);
-    data.append("brand", formData.brand);
-    data.append("category", formData.category);
-    data.append("price", formData.price);
-    data.append("stock", formData.stock);
-
-    for (let i = 0; i < formData.images.length; i++) {
-      data.append("productImages", formData.images[i]);
-    }
-
     try {
-      await axios.patch(`/admin/update-product/${productId}`, data, {
+      await axios.patch(`/admin/update-product/${productId}`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
       setLoading(false);
@@ -148,12 +96,12 @@ function EditProduct({ productId, onClose }) {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="title">Name</Label>
                 <Input
-                  id="name"
+                  id="title"
                   type="text"
                   className="w-full"
-                  value={formData.name}
+                  value={formData.title}
                   onChange={handleChange}
                   required
                 />
@@ -178,30 +126,6 @@ function EditProduct({ productId, onClose }) {
                 />
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                  required
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Categories</SelectLabel>
-                      {categories.map((category) => (
-                        <SelectItem key={category._id} value={category._id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-3">
                 <Label htmlFor="price">Price</Label>
                 <Input
                   id="price"
@@ -223,16 +147,6 @@ function EditProduct({ productId, onClose }) {
                   required
                 />
               </div>
-              <div className="grid gap-3 sm:col-span-2">
-                <Label htmlFor="images">Images</Label>
-                <Input
-                  id="images"
-                  type="file"
-                  className="w-full"
-                  multiple
-                  onChange={handleImageChange}
-                />
-              </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-4">
@@ -246,7 +160,7 @@ function EditProduct({ productId, onClose }) {
                   Please Wait
                 </div>
               ) : (
-                "Update Product"
+                "Save Changes"
               )}
             </Button>
           </CardFooter>

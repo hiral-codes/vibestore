@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { Delete, MoreHorizontal, PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import AddProduct from "./addProduct";
+import AddProduct from "../controllers/add-product";
 import axios from "../utils/api";
 import {
   Card,
@@ -26,106 +26,119 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import EditProduct from "./editProduct";
+
+import EditProduct from "../controllers/update-product";
+import AddCategory from "@/controllers/add-category";
+import DeleteCategory from "@/controllers/delete-category";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Products() {
   const [isAddProductVisible, setIsAddProductVisible] = useState(false);
   const [isAddCategoryVisible, setIsAddCategoryVisible] = useState(false);
   const [isEditVisible, setEditVisible] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(null);
-  const handleEditClick = (id) => {
-    setSelectedProductId(id);
-    setEditVisible(true);
-  };
+  const [isDeleteCat, setIsDeleteCat] = useState(false);
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Number of items per page
+  const [itemsPerPage] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
-  }, [isAddProductVisible]);
+  }, [isAddProductVisible, isEditVisible]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
       const response = await axios.get("/user/products");
       setProducts(response.data);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching products:", error);
-    }
-  };
-
-  const handleAddCategory = () => {
-    setIsAddCategoryVisible(true);
-  };
-
-  const handleCloseAddCategory = () => {
-    setIsAddCategoryVisible(false);
-  };
-
-  const handleSubmitCategory = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await axios.post("/admin/categories", { name: newCategory });
-      toast({ description: "Category added successfully!" });
-      setNewCategory("");
-      setIsAddCategoryVisible(false);
-      fetchProducts();
-    } catch (error) {
-      toast({ description: "There was an error adding the category!" });
-      console.error("Error adding category:", error);
-    } finally {
       setLoading(false);
     }
   };
 
-  const [newCategory, setNewCategory] = useState("");
-  const [loading, setLoading] = useState(false);
+  const handleEditClick = (id) => {
+    setSelectedProductId(id);
+    setEditVisible(true);
+  };
 
-  // Pagination logic
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/admin/delete-product/${id}`);
+      setProducts(products.filter((product) => product._id !== id));
+      toast({ description: "Product Deleted", status: "success" });
+      setDeleteProductId(null);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({ description: "Error Deleting Product", status: "error" });
+    }
+  };
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Change page
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber) => {
+    if (pageNumber < 1) {
+      setCurrentPage(1);
+    } else if (pageNumber > totalPages) {
+      setCurrentPage(totalPages);
+    } else {
+      setCurrentPage(pageNumber);
+    }
+  };
 
   return (
-    <div className="relative">
-      {isAddProductVisible && (
-        <AddProduct onClose={() => setIsAddProductVisible(false)} />
-      )}
-      <Card
-        className={isAddProductVisible || isAddCategoryVisible ? "blur-sm" : ""}
-      >
+    <div className="flex flex-col h-full">
+      <Card className="flex flex-col flex-grow">
         <CardHeader>
           <CardTitle>Products</CardTitle>
           <CardDescription>Manage your products here.</CardDescription>
-          <div className="pt-4 flex space-x-2">
-            <Button onClick={() => setIsAddProductVisible(true)}>
-              <PlusCircle className="mr-2 h-6" />
+          <div className="pt-4 flex space-x-4">
+            <Button
+              variant="secondary"
+              onClick={() => setIsAddProductVisible(true)}
+            >
+              <PlusCircle className="mr-2 h-5" />
               Add Product
             </Button>
-            <Button onClick={handleAddCategory}>
-              <PlusCircle className="mr-2 h-6" />
+            <Button
+              variant="secondary"
+              onClick={() => setIsAddCategoryVisible(true)}
+            >
+              <PlusCircle className="mr-2 h-5" />
               Add Category
+            </Button>
+            <Button variant="secondary" onClick={() => setIsDeleteCat(true)}>
+              <Delete className="mr-2 h-5" />
+              Delete Category
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -138,7 +151,7 @@ export default function Products() {
                 <TableHead>Brand</TableHead>
                 <TableHead className="hidden md:table-cell">Stock</TableHead>
                 <TableHead className="hidden md:table-cell">
-                  Created at
+                  Last Updated
                 </TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -146,60 +159,75 @@ export default function Products() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentProducts.map((product) => (
-                <TableRow key={product._id}>
-                  <TableCell className="hidden sm:table-cell">
-                    <img
-                      alt="Product img"
-                      className="aspect-square rounded-md object-cover"
-                      height="64"
-                      src={product.productImages[0] || "default-image-url"}
-                      width="64"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{product.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>${product.price}</TableCell>
-                  <TableCell>{product.brand}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {product.stock}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {new Date(product.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+              {loading ? (
+                <div>Loading...</div>
+              ) : currentProducts.length === 0 ? (
+                <div>No Products</div>
+              ) : (
+                currentProducts.map((product) => (
+                  <TableRow key={product._id}>
+                    <TableCell className="hidden sm:table-cell">
+                      <img
+                        alt="Product img"
+                        className="aspect-square rounded-md object-cover"
+                        height="64"
+                        src={product.productImages[0] || "default-image-url"}
+                        width="64"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {product.title}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>${product.price}</TableCell>
+                    <TableCell>{product.brand}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {product.stock}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs font-bold">
+                      {new Date(product.updatedAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
-                            className="w-full"
-                            onClick={() => handleEditClick(product._id)}
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
                           >
-                            Edit
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
                           </Button>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Button className="w-full">Delete</Button>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Button
+                              className="w-full h-7"
+                              variant="ghost"
+                              onClick={() => handleEditClick(product._id)}
+                            >
+                              Edit
+                            </Button>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Button
+                              className="w-full h-7"
+                              variant="ghost"
+                              onClick={() => setDeleteProductId(product._id)}
+                            >
+                              Delete
+                            </Button>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -212,24 +240,21 @@ export default function Products() {
                 disabled={currentPage === 1}
               />
               {products.length > 0 &&
-                Array.from(
-                  { length: Math.ceil(products.length / itemsPerPage) },
-                  (_, index) => (
-                    <PaginationItem key={index} className="cursor-pointer">
-                      <PaginationLink
-                        className="cursor-pointer"
-                        onClick={() => paginate(index + 1)}
-                        isActive={index + 1 === currentPage}
-                      >
-                        {index + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
+                Array.from({ length: totalPages }, (_, index) => (
+                  <PaginationItem key={index} className="cursor-pointer">
+                    <PaginationLink
+                      className="cursor-pointer"
+                      onClick={() => paginate(index + 1)}
+                      isActive={index + 1 === currentPage}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
               <PaginationNext
                 className="cursor-pointer"
                 onClick={() => paginate(currentPage + 1)}
-                disabled={indexOfLastItem >= products.length}
+                disabled={currentPage === totalPages}
               />
             </PaginationContent>
           </Pagination>
@@ -244,50 +269,48 @@ export default function Products() {
         </CardFooter>
       </Card>
 
-      {isAddCategoryVisible && (
-        <div className="fixed p-4 sm:p-0 inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <Card className="relative z-10 max-w-lg w-full">
-            <CardHeader>
-              <CardTitle>Add New Category</CardTitle>
-              <CardDescription>
-                Enter the name of the new category.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitCategory}>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="grid gap-3">
-                    <Label htmlFor="categoryName">Category Name</Label>
-                    <Input
-                      id="categoryName"
-                      value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <CardFooter className="flex justify-end gap-4 mt-4">
-                  <Button
-                    variant="ghost"
-                    onClick={handleCloseAddCategory}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Adding..." : "Add Category"}
-                  </Button>
-                </CardFooter>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+      <span className="sr-only">Add Product</span>
+      {isAddProductVisible && (
+        <AddProduct onClose={() => setIsAddProductVisible(false)} />
       )}
+
+      <span className="sr-only">Add Category</span>
+      {isAddCategoryVisible && (
+        <AddCategory
+          onClose={() => {
+            setIsAddCategoryVisible(false);
+          }}
+        />
+      )}
+
+      <span className="sr-only">Update Product</span>
       {isEditVisible && (
         <EditProduct
           productId={selectedProductId}
           onClose={() => setEditVisible(false)}
         />
+      )}
+      {isDeleteCat && <DeleteCategory onClose={() => setIsDeleteCat(false)} />}
+
+      {deleteProductId && (
+        <AlertDialog open={true} onOpenChange={() => setDeleteProductId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the product.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteProductId(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleDelete(deleteProductId)}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

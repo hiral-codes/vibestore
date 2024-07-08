@@ -1,17 +1,13 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/protected-routes";
-import { Layout } from "./components/admin-layout";
-import { CustomerLayout } from "./components/customer-layout";
+import { Layout } from "./layout/admin-layout";
+import { CustomerLayout } from "./layout/customer-layout";
 import Home from "./components/Home";
 import Orders from "./pages/Order";
 import Products from "./pages/manage-product";
 import Customers from "./pages/Customers";
 import Analytics from "./pages/Analytics";
-// import Orders from "./components/Order";
-// import Products from "./components/Products";
-// import Customers from "./components/Customers";
-// import Analytics from "./components/Analytics";
 
 const isAdmin = true;
 
@@ -26,7 +22,7 @@ function App() {
           <Route path="customers" element={<Customers />} />
           <Route path="analytics" element={<Analytics />} /> */}
         </Route>
-
+        {/*Routes For Admin*/}
         <Route
           path="/admin"
           element={

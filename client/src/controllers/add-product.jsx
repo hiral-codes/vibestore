@@ -197,11 +197,14 @@ function AddProduct({ onClose }) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading
-                ? `${(
-                    <LoaderIcon className="mr-2 animate-spin repeat-infinite" />
-                  )}Please Wait`
-                : "Add Product"}
+              {loading ? (
+                <div className="flex items-center">
+                  <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                  Please Wait
+                </div>
+              ) : (
+                "Add Product"
+              )}
             </Button>
           </CardFooter>
         </Card>
