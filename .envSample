@@ -1,0 +1,6 @@
+PORT = 8000
+MONGO_DB_URI = mongodb://localhost:27017
+JWT_SECRET = your_secret
+CLOUDINARY_CLOUD_NAME=yourcloud_name
+CLOUDINARY_API_KEY=yourapi-key
+CLOUDINARY_API_SECRET=your-secret
