@@ -110,6 +110,9 @@ export default function Products() {
       setCurrentPage(pageNumber);
     }
   };
+  function formatPrice(price) {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -162,7 +165,22 @@ export default function Products() {
               {loading ? (
                 <div>Loading...</div>
               ) : currentProducts.length === 0 ? (
-                <div>No Products</div>
+                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+                  <div className="flex flex-col items-center gap-1 text-center">
+                    <h3 className="text-2xl font-bold tracking-tight">
+                      You have no products
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      You can start selling as soon as you add a product.
+                    </p>
+                    <Button
+                      onClick={() => setIsAddProductVisible(true)}
+                      className="mt-4"
+                    >
+                      Add Product
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 currentProducts.map((product) => (
                   <TableRow key={product._id}>
@@ -183,7 +201,7 @@ export default function Products() {
                         {product.stock > 0 ? "In Stock" : "Out of Stock"}
                       </Badge>
                     </TableCell>
-                    <TableCell>${product.price}</TableCell>
+                    <TableCell>&#x20B9;{formatPrice(product.price)}</TableCell>
                     <TableCell>{product.brand}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       {product.stock}
@@ -298,7 +316,8 @@ export default function Products() {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the product.
+                This action cannot be undone. This will permanently delete the
+                product.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

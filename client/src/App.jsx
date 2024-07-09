@@ -8,6 +8,8 @@ import Orders from "./pages/Order";
 import Products from "./pages/manage-product";
 import Customers from "./pages/Customers";
 import Analytics from "./pages/Analytics";
+import { SignUpForm } from "./components/auth/sign-up";
+import { LoginForm } from "./components/auth/login";
 
 const isAdmin = true;
 
@@ -15,6 +17,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/auth/signup" element={<SignUpForm />} />
+        <Route path="/auth/login" element={<LoginForm />} />
         <Route path="/" element={<CustomerLayout />}>
           <Route index element={<Home />} />
           {/* <Route path="orders" element={<Orders />} />

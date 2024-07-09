@@ -1,21 +1,27 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-const app = express();
+import { connectDB } from "./database/DB.js";
 
-app.use(bodyParser.json());
-app.use(cors());
+const app = express();
 dotenv.config();
 
-// Connecting Database
-mongoose.connect(process.env.MONGO_DB_URI);
+connectDB();
+
+app.use(cors());
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(bodyParser.json());
+app.use(cookieParser());
+
+// Routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running at http://localhost:${process.env.PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
