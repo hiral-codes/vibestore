@@ -17,14 +17,16 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth */}
         <Route path="/auth/signup" element={<SignUpForm />} />
         <Route path="/auth/login" element={<LoginForm />} />
+
+        {/* End User Layout */}
         <Route path="/" element={<CustomerLayout />}>
           <Route index element={<Home />} />
           {/* <Route path="orders" element={<Orders />} />
           <Route path="products" element={<Products />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="analytics" element={<Analytics />} /> */}
+          */}
         </Route>
         {/*Routes For Admin*/}
         <Route
