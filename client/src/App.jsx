@@ -23,11 +23,13 @@ function App() {
 
         {/* End User Layout */}
         <Route path="/" element={<CustomerLayout />}>
+
           <Route index element={<Home />} />
-          {/* <Route path="orders" element={<Orders />} />
           <Route path="products" element={<Products />} />
-          */}
+          <Route path="orders" element={<Orders />} />
+          
         </Route>
+
         {/*Routes For Admin*/}
         <Route
           path="/admin"
