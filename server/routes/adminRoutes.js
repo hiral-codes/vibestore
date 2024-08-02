@@ -6,6 +6,8 @@ import {
   deleteCategory,
   deleteProduct,
   updateProduct,
+  getAllUsers,
+  getUser,
 } from "../controllers/Admin.js";
 
 const router = express.Router();
@@ -15,4 +17,6 @@ router.delete("/delete-product/:id", deleteProduct);
 router.patch("/update-product/:id", updateProduct);
 router.post("/categories", addCategory);
 router.delete("/categories/:id", deleteCategory);
+router.get("/users", getAllUsers)
+router.get("/users/:id", getUser)
 export default router;

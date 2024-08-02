@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/protected-routes";
 import { Layout } from "./layout/admin-layout";
 import { CustomerLayout } from "./layout/customer-layout";
-import Home from "./components/Home";
+import { Home } from "./components/Home";
 import Orders from "./pages/Order";
 import Products from "./pages/manage-product";
 import Customers from "./pages/Customers";
 import Analytics from "./pages/Analytics";
 import { SignUpForm } from "./components/auth/sign-up";
 import { LoginForm } from "./components/auth/login";
+import ProductDetails from "./components/product-details";
 
 const isAdmin = true;
 
@@ -23,11 +24,9 @@ function App() {
 
         {/* End User Layout */}
         <Route path="/" element={<CustomerLayout />}>
-
           <Route index element={<Home />} />
-          <Route path="products" element={<Products />} />
+          <Route path="product/:id" element={<ProductDetails />} />
           <Route path="orders" element={<Orders />} />
-          
         </Route>
 
         {/*Routes For Admin*/}

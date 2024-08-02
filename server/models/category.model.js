@@ -6,6 +6,9 @@ const categorySchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    subcategory: {
+      type: String
+    }
   },
   { timestamps: true }
 );

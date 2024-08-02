@@ -1,4 +1,5 @@
-import Product from "../models/product.model.js";
+import { Product } from "../models/product.model.js";
+import User from "../models/user.model.js";
 import Category from "../models/category.model.js";
 import cloudinary from "../utils/cloudinary.js";
 
@@ -10,6 +11,8 @@ export const addProduct = async (req, res) => {
     description,
     category,
     price,
+    sizes,
+    colours,
     stock,
     rating,
     numberofReviews,
@@ -33,11 +36,12 @@ export const addProduct = async (req, res) => {
       productImages,
       category,
       price,
+      sizes,
+      colours,
       stock,
       rating,
       numberofReviews,
     });
-
     const savedProduct = await newProduct.save();
     res.status(201).json(savedProduct);
   } catch (error) {
@@ -134,3 +138,22 @@ export const deleteCategory = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const Users = await User.find();
+    res.status(201).json(Users)
+  } catch (error) {
+    res.status(400).json({ message: "Error Getting Users", error: error })
+  }
+}
+
+export const getUser = async (req, res) => {
+  const id = req.params;
+  try {
+    const Users = await User.findOne(id);
+    res.status(201).json(Users)
+  } catch (error) {
+    res.status(400).json({ message: "Error Getting Users", error: error })
+  }
+}
